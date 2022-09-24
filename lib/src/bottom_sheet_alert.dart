@@ -29,6 +29,7 @@ Future<T?> showAdaptiveActionSheet<T>({
   Color? barrierColor,
   Color? bottomSheetColor,
   double? androidBorderRadius,
+  Brightness? brightness,
   bool isDismissible = true,
 }) async {
   assert(
@@ -44,6 +45,7 @@ Future<T?> showAdaptiveActionSheet<T>({
     barrierColor,
     bottomSheetColor,
     androidBorderRadius,
+    brightness,
     isDismissible: isDismissible,
   );
 }
@@ -55,7 +57,8 @@ Future<T?> _show<T>(
   CancelAction? cancelAction,
   Color? barrierColor,
   Color? bottomSheetColor,
-  double? androidBorderRadius, {
+  double? androidBorderRadius,
+  Brightness? brightness, {
   bool isDismissible = true,
 }) {
   if (Platform.isIOS) {
@@ -64,6 +67,7 @@ Future<T?> _show<T>(
       title,
       actions,
       cancelAction,
+      brightness,
       isDismissible: isDismissible,
     );
   } else {
@@ -84,7 +88,8 @@ Future<T?> _showCupertinoBottomSheet<T>(
   BuildContext context,
   Widget? title,
   List<BottomSheetAction> actions,
-  CancelAction? cancelAction, {
+  CancelAction? cancelAction,
+  Brightness? brightness, {
   bool isDismissible = true,
 }) {
   final defaultTextStyle =
@@ -93,56 +98,63 @@ Future<T?> _showCupertinoBottomSheet<T>(
     context: context,
     barrierDismissible: isDismissible,
     builder: (BuildContext coxt) {
-      return CupertinoActionSheet(
-        title: title,
-        actions: actions.map((action) {
-          /// Modal Popup doesn't inherited material widget
-          /// so need to provide one in case trailing or
-          /// leading widget require a Material widget ancestor.
-          return Material(
-            color: Colors.transparent,
-            child: CupertinoActionSheetAction(
-              onPressed: () => action.onPressed(coxt),
-              child: Row(
-                children: [
-                  if (action.leading != null) ...[
-                    action.leading!,
-                    const SizedBox(width: 15),
-                  ],
-                  Expanded(
-                    child: DefaultTextStyle(
-                      style: defaultTextStyle,
-                      textAlign: action.leading != null
-                          ? TextAlign.start
-                          : TextAlign.center,
-                      child: action.title,
+      return Theme(
+        data: ThemeData(
+          cupertinoOverrideTheme: CupertinoThemeData(
+            brightness: brightness,
+          ),
+        ),
+        child: CupertinoActionSheet(
+          title: title,
+          actions: actions.map((action) {
+            /// Modal Popup doesn't inherited material widget
+            /// so need to provide one in case trailing or
+            /// leading widget require a Material widget ancestor.
+            return Material(
+              color: Colors.transparent,
+              child: CupertinoActionSheetAction(
+                onPressed: () => action.onPressed(coxt),
+                child: Row(
+                  children: [
+                    if (action.leading != null) ...[
+                      action.leading!,
+                      const SizedBox(width: 15),
+                    ],
+                    Expanded(
+                      child: DefaultTextStyle(
+                        style: defaultTextStyle,
+                        textAlign: action.leading != null
+                            ? TextAlign.start
+                            : TextAlign.center,
+                        child: action.title,
+                      ),
                     ),
-                  ),
-                  if (action.trailing != null) ...[
-                    const SizedBox(width: 10),
-                    action.trailing!,
+                    if (action.trailing != null) ...[
+                      const SizedBox(width: 10),
+                      action.trailing!,
+                    ],
                   ],
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-        cancelButton: cancelAction != null
-            ? CupertinoActionSheetAction(
-                onPressed: () {
-                  if (cancelAction.onPressed != null) {
-                    cancelAction.onPressed!(coxt);
-                  } else {
-                    Navigator.of(coxt).pop();
-                  }
-                },
-                child: DefaultTextStyle(
-                  style: defaultTextStyle.copyWith(color: Colors.lightBlue),
-                  textAlign: TextAlign.center,
-                  child: cancelAction.title,
                 ),
-              )
-            : null,
+              ),
+            );
+          }).toList(),
+          cancelButton: cancelAction != null
+              ? CupertinoActionSheetAction(
+                  onPressed: () {
+                    if (cancelAction.onPressed != null) {
+                      cancelAction.onPressed!(coxt);
+                    } else {
+                      Navigator.of(coxt).pop();
+                    }
+                  },
+                  child: DefaultTextStyle(
+                    style: defaultTextStyle.copyWith(color: Colors.lightBlue),
+                    textAlign: TextAlign.center,
+                    child: cancelAction.title,
+                  ),
+                )
+              : null,
+        ),
       );
     },
   );
